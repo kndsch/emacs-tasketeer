@@ -1,0 +1,96 @@
+version: '3'
+
+vars:
+  GREETING: Hello
+  PROJECT_NAME: TestProject
+
+tasks:
+  default:
+    desc: Default task - builds and tests
+    deps: [build, test]
+    
+  build:
+    desc: Build the application
+    cmds:
+      - echo "Building {{.PROJECT_NAME}}..."
+      - mkdir -p dist
+      - echo "Build complete"
+      
+  compile:
+    desc: Compile source files
+    cmds:
+      - echo "Compiling sources..."
+      - echo "Compilation done"
+      
+  test:
+    desc: Run tests
+    cmds:
+      - echo "Running tests..."
+      - echo "All tests passed"
+      
+  test-unit:
+    desc: Run unit tests only
+    cmds:
+      - echo "Running unit tests..."
+      
+  test-integration:
+    desc: Run integration tests
+    deps: [build]
+    cmds:
+      - echo "Running integration tests..."
+      
+  clean:
+    desc: Clean build artifacts
+    cmds:
+      - rm -rf dist
+      - echo "Cleaned build artifacts"
+      
+  install:
+    desc: Install the application
+    deps: [build]
+    cmds:
+      - echo "Installing {{.PROJECT_NAME}}..."
+      
+  dev:
+    desc: Development workflow
+    deps: [clean, build, test]
+    
+  lint:
+    desc: Run linting
+    cmds:
+      - echo "Running linter..."
+      - echo "Linting complete"
+      
+  format:
+    desc: Format code
+    cmds:
+      - echo "Formatting code..."
+      
+  watch:
+    desc: Watch for changes
+    cmds:
+      - echo "Watching for changes..."
+      - echo "{{.GREETING}} from {{.PROJECT_NAME}}"
+      
+  benchmark:
+    desc: Run benchmarks
+    deps: [build]
+    cmds:
+      - echo "Running benchmarks..."
+      
+  deploy:
+    desc: Deploy application
+    deps: [build, test]
+    cmds:
+      - echo "Deploying {{.PROJECT_NAME}}..."
+      
+  docker-build:
+    desc: Build Docker image
+    cmds:
+      - echo "Building Docker image..."
+      
+  docker-run:
+    desc: Run Docker container
+    deps: [docker-build]
+    cmds:
+      - echo "Running Docker container..."

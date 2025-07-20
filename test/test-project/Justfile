@@ -1,0 +1,147 @@
+# Example Justfile for testing tasketeer functionality
+# Demonstrates various recipe types and Just-specific features
+
+# Variables
+cc := "gcc"
+cflags := "-Wall -Wextra -std=c99"
+srcdir := "src"
+builddir := "build"
+
+# Default recipe
+default: build
+
+# Build recipes
+build: compile
+    @echo "Building application..."
+    {{cc}} {{builddir}}/*.o -o {{builddir}}/myapp
+
+compile:
+    @echo "Compiling sources..."
+    mkdir -p {{builddir}}
+    {{cc}} {{cflags}} -c {{srcdir}}/*.c -o {{builddir}}/
+
+# Testing recipes
+test: build
+    @echo "Running tests..."
+    ./{{builddir}}/myapp --test
+
+test-unit:
+    @echo "Running unit tests..."
+    ./{{builddir}}/myapp --unit-tests
+
+test-integration: build
+    @echo "Running integration tests..."
+    ./{{builddir}}/myapp --integration-tests
+
+# Development recipes
+dev: clean build test
+
+watch:
+    @echo "Watching for changes..."
+    watchexec --exts c -- just build test
+
+# Cleanup recipes
+clean:
+    @echo "Cleaning build files..."
+    rm -rf {{builddir}}
+
+clean-all: clean
+    @echo "Cleaning all generated files..."
+    rm -f *.log *.tmp
+
+# Installation recipes
+install: build
+    @echo "Installing application..."
+    cp {{builddir}}/myapp /usr/local/bin/
+
+uninstall:
+    @echo "Uninstalling application..."
+    rm -f /usr/local/bin/myapp
+
+# Code quality recipes
+lint:
+    @echo "Running linter..."
+    cppcheck {{srcdir}}/*.c
+
+format:
+    @echo "Formatting code..."
+    clang-format -i {{srcdir}}/*.c
+
+check: lint test
+
+# Documentation recipes
+docs:
+    @echo "Generating documentation..."
+    doxygen Doxyfile
+
+docs-serve: docs
+    @echo "Serving documentation..."
+    python3 -m http.server 8000 -d docs/html
+
+# Release recipes
+release version: clean build test
+    @echo "Creating release {{version}}..."
+    git tag -a v{{version}} -m "Release {{version}}"
+    tar -czf myapp-{{version}}.tar.gz {{builddir}}/myapp README.md
+
+package: build
+    @echo "Creating package..."
+    tar -czf myapp-latest.tar.gz {{builddir}}/myapp
+
+# Docker recipes
+docker-build:
+    @echo "Building Docker image..."
+    docker build -t myapp .
+
+docker-run: docker-build
+    @echo "Running Docker container..."
+    docker run --rm myapp
+
+docker-shell: docker-build
+    @echo "Starting interactive shell..."
+    docker run --rm -it myapp /bin/bash
+
+# Benchmarking recipes
+benchmark: build
+    @echo "Running benchmarks..."
+    ./{{builddir}}/myapp --benchmark
+
+profile: build
+    @echo "Profiling application..."
+    valgrind --tool=callgrind ./{{builddir}}/myapp
+
+# Debug recipes
+debug:
+    @echo "Building debug version..."
+    {{cc}} {{cflags}} -g -DDEBUG -c {{srcdir}}/*.c
+    {{cc}} *.o -o {{builddir}}/myapp-debug
+
+gdb: debug
+    @echo "Starting GDB..."
+    gdb {{builddir}}/myapp-debug
+
+# Environment setup recipes
+setup:
+    @echo "Setting up development environment..."
+    sudo apt-get update
+    sudo apt-get install build-essential cppcheck clang-format doxygen
+
+deps: setup
+    @echo "Installing dependencies..."
+    # Add dependency installation commands here
+
+# Utility recipes
+show-vars:
+    @echo "Variables:"
+    @echo "  cc: {{cc}}"
+    @echo "  cflags: {{cflags}}"
+    @echo "  srcdir: {{srcdir}}"
+    @echo "  builddir: {{builddir}}"
+
+list-files:
+    @echo "Source files:"
+    @find {{srcdir}} -name "*.c" -o -name "*.h"
+
+help:
+    @echo "Available recipes:"
+    @just --list

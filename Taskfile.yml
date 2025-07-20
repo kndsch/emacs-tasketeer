@@ -1,0 +1,86 @@
+version: '3'
+
+tasks:
+  clean:
+    desc: Clean compiled files
+    cmds:
+      - rm -f *.elc
+
+  format:
+    desc: Format Emacs Lisp files using built-in indentation
+    vars:
+      FILE: '{{.FILE | default "*.el"}}'
+    cmds:
+      - |
+        if [[ "{{.FILE}}" == *.el ]]; then
+          emacs --batch "{{.FILE}}" --eval "(progn (indent-region (point-min) (point-max)) (save-buffer))"
+        else
+          for file in {{.FILE}}; do
+            emacs --batch "$file" --eval "(progn (indent-region (point-min) (point-max)) (save-buffer))"
+          done
+        fi
+
+  lint:
+    desc: Lint Emacs Lisp files using built-in checkdoc
+    vars:
+      FILE: '{{.FILE | default "*.el"}}'
+    cmds:
+      - |
+        if [[ "{{.FILE}}" == *.el ]]; then
+          emacs --batch "{{.FILE}}" --eval "(checkdoc-file \"{{.FILE}}\")"
+        else
+          for file in {{.FILE}}; do
+            emacs --batch "$file" --eval "(checkdoc-file \"$file\")"
+          done
+        fi
+
+  lint:byte-compile:
+    desc: Byte compile to check for warnings
+    vars:
+      FILE: '{{.FILE | default "tasketeer.el"}}'
+    cmds:
+      - emacs --batch --eval "(byte-compile-file \"{{.FILE}}\")"
+    generates:
+      - "{{.FILE}}c"
+
+  test:
+    desc: Run basic functionality test
+    cmds:
+      - emacs --batch -l tasketeer.el --eval "(message \"Package loaded successfully\")"
+
+  test:unit:
+    desc: Run ERT unit tests
+    cmds:
+      - emacs --batch -l test/run-tests.el
+
+  test:integration:
+    desc: Run integration tests (requires external tools like make, task, just)
+    cmds:
+      - emacs --batch -l test/run-tests.el --integration
+
+  test:all:
+    desc: Run all tests including integration tests
+    cmds:
+      - emacs --batch -l test/run-tests.el --all
+
+  test:interactive:
+    desc: Run tests interactively in Emacs
+    cmds:
+      - emacs -l tasketeer.el -l test/tasketeer-test.el --eval "(ert t)"
+
+  test:coverage:
+    desc: Run tests with coverage analysis
+    cmds:
+      - emacs --batch -l tasketeer.el -l test/tasketeer-test.el --eval "(progn (require 'undercover) (undercover \"*.el\") (ert-run-tests-batch-and-exit))"
+
+  test:fixtures:
+    desc: Validate test fixtures
+    cmds:
+      - echo "Checking test fixtures..."
+      - test -f test/fixtures/make-project/Makefile
+      - test -f test/fixtures/task-project/Taskfile.yml
+      - test -f test/fixtures/just-project/justfile
+      - test -f test/fixtures/mixed-project/GNUmakefile
+      - test -f test/fixtures/mixed-project/taskfile.yaml
+      - test -f test/fixtures/mixed-project/.justfile
+      - echo "All fixtures present"

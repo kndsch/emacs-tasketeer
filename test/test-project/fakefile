@@ -1,0 +1,22 @@
+# Fake build file for testing
+# This file simulates a build configuration
+
+build: compile test
+	echo "Building project"
+
+compile:
+	echo "Compiling sources"
+
+test:
+	echo "Running tests"
+
+clean:
+	echo "Cleaning up"
+
+deploy: build
+	echo "Deploying application"
+
+lint:
+	echo "Running linter"
+
+.PHONY: build compile test clean deploy lint
